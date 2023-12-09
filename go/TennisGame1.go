@@ -1,72 +1,86 @@
 package tenniskata
 
+import (
+	"fmt"
+	"math"
+	"strconv"
+)
+
 type tennisGame1 struct {
-	m_score1    int
-	m_score2    int
-	player1Name string
-	player2Name string
+	player1 Player
+	player2 Player
+}
+
+type Player struct {
+	name  string
+	score int
+}
+
+func (player *Player) ScoreName() string {
+	switch player.score {
+	case 0:
+		return "Love"
+	case 1:
+		return "Fifteen"
+	case 2:
+		return "Thirty"
+	case 3:
+		return "Forty"
+
+	default:
+		return strconv.Itoa(player.score)
+	}
 }
 
 func TennisGame1(player1Name string, player2Name string) TennisGame {
 	game := &tennisGame1{
-		player1Name: player1Name,
-		player2Name: player2Name}
+		player1: Player{
+			name: player1Name,
+		},
+		player2: Player{
+			name: player2Name,
+		},
+	}
 
 	return game
 }
 
 func (game *tennisGame1) WonPoint(playerName string) {
-	if playerName == "player1" {
-		game.m_score1 += 1
-	} else {
-		game.m_score2 += 1
+	switch playerName {
+	case game.player1.name:
+		game.player1.score += 1
+	case game.player2.name:
+		game.player2.score += 1
 	}
 }
 
 func (game *tennisGame1) GetScore() string {
-	score := ""
-	tempScore := 0
-	if game.m_score1 == game.m_score2 {
-		switch game.m_score1 {
-		case 0:
-			score = "Love-All"
-		case 1:
-			score = "Fifteen-All"
-		case 2:
-			score = "Thirty-All"
+	switch {
+	case game.player1.score == game.player2.score:
+		switch {
+		case game.player1.score < 3:
+			return fmt.Sprintf("%s-All", game.player1.ScoreName())
 		default:
-			score = "Deuce"
+			return "Deuce"
 		}
-	} else if game.m_score1 >= 4 || game.m_score2 >= 4 {
-		minusResult := game.m_score1 - game.m_score2
-		if minusResult == 1 {
-			score = "Advantage player1"
-		} else if minusResult == -1 {
-			score = "Advantage player2"
-		} else if minusResult >= 2 {
-			score = "Win for player1"
+	case game.player1.score >= 4 || game.player2.score >= 4:
+		scoreDifference := game.player1.score - game.player2.score
+		var leadingPlayer *Player
+
+		if scoreDifference > 0 {
+			leadingPlayer = &game.player1
 		} else {
-			score = "Win for player2"
+			leadingPlayer = &game.player2
 		}
-	} else {
-		for i := 1; i < 3; i++ {
-			if i == 1 {
-				tempScore = game.m_score1
-			} else {
-				score += "-"
-				tempScore = game.m_score2
-			}
-			switch tempScore {
-			case 0:
-				score += "Love"
-			case 1:
-				score += "Fifteen"
-			case 2:
-				score += "Thirty"
-			case 3:
-				score += "Forty"
-			}
+
+		switch math.Abs(float64(scoreDifference)) {
+		case 1:
+			return fmt.Sprintf("Advantage %s", leadingPlayer.name)
+		default:
+			return fmt.Sprintf("Win for %s", leadingPlayer.name)
 		}
+
+	default:
+		return fmt.Sprintf("%s-%s", game.player1.ScoreName(), game.player2.ScoreName())
 	}
-	return score
 }
